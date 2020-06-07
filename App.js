@@ -14,11 +14,6 @@ export default function App() {
       <NavigationContainer>
         <Stack.Navigator>
           <Stack.Screen
-            name="MapGeolacation"
-            component={MapGeolacation}
-            options={{ title: "Geolacation" }}
-          />
-          <Stack.Screen
             name="SendMessage"
             component={SendNumber}
             options={{ title: "Welcome" }}
@@ -32,6 +27,11 @@ export default function App() {
             name="CreateProfile"
             component={CreateProfile}
             options={{ title: "Create Account" }}
+          />
+          <Stack.Screen
+            name="MapGeolacation"
+            component={MapGeolacation}
+            options={{ title: "Geolacation" }}
           />
         </Stack.Navigator>
       </NavigationContainer>
