@@ -12,12 +12,12 @@ import MapView from "react-native-maps";
 import Constants from "expo-constants";
 import * as Location from "expo-location";
 export default function MapGeol() {
-  const [location, setLocation] = useState({
+  const [mapLocation, setMapLocation] = useState({
     coords: {
       latitude: 36.803998,
       longitude: 10.1698,
-      latitudeDelta: 10,
-      longitudeDelta: 30,
+      latitudeDelta: 0.015 * 3,
+      longitudeDelta: 0.0121 * 3,
     },
   });
   const [from, setFrom] = useState("");
@@ -29,7 +29,7 @@ export default function MapGeol() {
       latitude: 36.803998,
       longitude: 10.1698,
     },
-    name:""
+    name: "",
   });
   const locateMe = () => {
     if (Platform.OS === "android" && !Constants.isDevice) {
@@ -41,42 +41,46 @@ export default function MapGeol() {
         let { status } = await Location.requestPermissionsAsync();
         if (status !== "granted") {
           setErrorMsg("Permission to access location was denied");
-          console.log("ungranted");
         } else {
           let location = await Location.getCurrentPositionAsync({});
+          console.log(location);
           if (location) {
-            setLocation(location);
-            let {name}= await getLocationName(location.coords.latitude,location.coords.longitude);
+            setMapLocation(location);
+            let { name } = await getLocationName(
+              location.coords.latitude,
+              location.coords.longitude
+            );
             setMyPosition({
               active: myPosition.active,
               location: {
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
               },
-              name:name
+              name: name,
             });
-           
+          } else {
+            console.log("none");
           }
         }
       })();
     }
   };
-const getLocationName=async(latitude,longitude)=>{
-  let response = await Location.reverseGeocodeAsync({
-            latitude: latitude,
-            longitude: longitude,
-          });
-        if (response) { 
-          response = response[0]; 
-        }
-        return response
-}
- 
+  const getLocationName = async (latitude, longitude) => {
+    let response = await Location.reverseGeocodeAsync({
+      latitude: latitude,
+      longitude: longitude,
+    });
+    if (response) {
+      response = response[0];
+    }
+    return response;
+  };
+
   let text = "Waiting..";
   if (errorMsg) {
     text = errorMsg;
-  } else if (location) {
-    text = JSON.stringify(location);
+  } else if (mapLocation) {
+    text = JSON.stringify(mapLocation);
   }
   const initial = {
     latitude: 36.803998,
@@ -107,14 +111,14 @@ const getLocationName=async(latitude,longitude)=>{
         style={styles.textInput}
         value={destination}
         onChangeText={(text) => setDestination(text)}
-        onEndEditing={() => getGeocode()}
       />
       {errorMsg ? (
         <Text style={styles.paragraph}>{text}</Text>
       ) : (
         <MapView
           style={styles.mapStyle}
-          initialRegion={initial}
+          initialRegion={mapLocation.coords}
+          region={mapLocation.coords}
           onPress={(location) => console.log(location.nativeEvent)}
         >
           <MapView.Marker
