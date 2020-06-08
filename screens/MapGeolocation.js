@@ -42,10 +42,17 @@ export default function MapGeol() {
         if (status !== "granted") {
           setErrorMsg("Permission to access location was denied");
         } else {
-          let location = await Location.getCurrentPositionAsync({});
+          let location = await  Location.getCurrentPositionAsync({});
           console.log(location);
           if (location) {
-            setMapLocation(location);
+            setMapLocation({
+              coords: {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                latitudeDelta: 0.015 * 3,
+                longitudeDelta: 0.0121 * 3,
+              },
+            });
             let { name } = await getLocationName(
               location.coords.latitude,
               location.coords.longitude
@@ -82,12 +89,6 @@ export default function MapGeol() {
   } else if (mapLocation) {
     text = JSON.stringify(mapLocation);
   }
-  const initial = {
-    latitude: 36.803998,
-    longitude: 10.1698,
-    latitudeDelta: 0.015 * 3,
-    longitudeDelta: 0.0121 * 3,
-  };
   return (
     <View style={styles.container}>
       <View style={styles.header}>
