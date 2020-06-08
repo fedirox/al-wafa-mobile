@@ -6,13 +6,18 @@ import { createStackNavigator } from "@react-navigation/stack";
 import SendNumber from "./screens/SendNumber";
 import CodeVerification from "./screens/CodeVerification";
 import CreateProfile from "./screens/CreateProfile";
-import MapGeolacation from "./screens/MapGeolacation";
+import MapGeolocation from "./screens/MapGeolocation";
 const Stack = createStackNavigator();
 export default function App() {
   return (
     <View style={styles.container}>
       <NavigationContainer>
         <Stack.Navigator>
+          <Stack.Screen
+            name="MapGeolocation"
+            component={MapGeolocation}
+            options={{ title: "MapGeolocation" }}
+          />
           <Stack.Screen
             name="SendMessage"
             component={SendNumber}
@@ -27,11 +32,6 @@ export default function App() {
             name="CreateProfile"
             component={CreateProfile}
             options={{ title: "Create Account" }}
-          />
-          <Stack.Screen
-            name="MapGeolacation"
-            component={MapGeolacation}
-            options={{ title: "Geolacation" }}
           />
         </Stack.Navigator>
       </NavigationContainer>
