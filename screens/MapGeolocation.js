@@ -23,14 +23,30 @@ export default function MapGeol() {
   const [from, setFrom] = useState("");
   const [destination, setDestination] = useState("");
   const [errorMsg, setErrorMsg] = useState(null);
+  const [activePosition, setActivePosition] = useState("from");
   const [myPosition, setMyPosition] = useState({
-    active: false,
     location: {
       latitude: 36.803998,
       longitude: 10.1698,
     },
-    name: "",
   });
+  const [myPositionName, setMyPositionName] = useState("");
+  changePostion = (location) => {
+    switch (activePosition) {
+      case "from":
+        setMyPosition({
+          location: location,
+        });
+        (async () => {
+          let { name } = await getLocationName(
+            location.latitude,
+            location.longitude
+          );
+          setMyPositionName(name);
+        })();
+        break;
+    }
+  };
   const locateMe = () => {
     if (Platform.OS === "android" && !Constants.isDevice) {
       setErrorMsg(
@@ -42,7 +58,7 @@ export default function MapGeol() {
         if (status !== "granted") {
           setErrorMsg("Permission to access location was denied");
         } else {
-          let location = await  Location.getCurrentPositionAsync({});
+          let location = await Location.getCurrentPositionAsync({});
           console.log(location);
           if (location) {
             setMapLocation({
@@ -58,12 +74,10 @@ export default function MapGeol() {
               location.coords.longitude
             );
             setMyPosition({
-              active: myPosition.active,
               location: {
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
               },
-              name: name,
             });
           } else {
             console.log("none");
@@ -98,9 +112,9 @@ export default function MapGeol() {
 
         <TextInput
           style={styles.textInput}
-          value={from}
+          value={myPositionName}
           onChangeText={(text) => {
-            setFrom(text);
+            setMyPositionName(text);
           }}
         />
         <Button title="locate me" onPress={locateMe} />
@@ -120,7 +134,9 @@ export default function MapGeol() {
           style={styles.mapStyle}
           initialRegion={mapLocation.coords}
           region={mapLocation.coords}
-          onPress={(location) => console.log(location.nativeEvent)}
+          onPress={(location) =>
+            changePostion(location?.nativeEvent.coordinate)
+          }
         >
           <MapView.Marker
             coordinate={myPosition.location}
