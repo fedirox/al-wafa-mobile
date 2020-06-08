@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Dimensions,
   TextInput,
+  Button,
 } from "react-native";
 import MapView from "react-native-maps";
 import Constants from "expo-constants";
@@ -22,8 +23,14 @@ export default function MapGeol() {
   const [from, setFrom] = useState("");
   const [destination, setDestination] = useState("");
   const [errorMsg, setErrorMsg] = useState(null);
-
-  const getGeocode = () => {
+  const [myPosition, setMyPosition] = useState({
+    active: false,
+    location: {
+      latitude: 36.803998,
+      longitude: 10.1698,
+    },
+  });
+  const locateMe = () => {
     if (Platform.OS === "android" && !Constants.isDevice) {
       setErrorMsg(
         "Oops, this will not work on Sketch in an Android emulator. Try it on your device!"
@@ -33,47 +40,32 @@ export default function MapGeol() {
         let { status } = await Location.requestPermissionsAsync();
         if (status !== "granted") {
           setErrorMsg("Permission to access location was denied");
+          console.log("ungranted");
+        } else {
+          let location = await Location.getCurrentPositionAsync({});
+          if (location) {
+            setLocation(location);
+            setMyPosition({
+              active: myPosition.active,
+              location: {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              },
+            });
+          }
         }
-
-        let location = await Location.getCurrentPositionAsync({});
-        if (location) setLocation(location);
-        let response = await Location.geocodeAsync(destination);
-        console.log(response);
-
-        // from=from[0]
-        // if (from){
-        //   setFrom(from.street +" "+from.city +" "+from.country)
-        // }
       })();
     }
   };
 
-  useEffect(() => {
-    if (Platform.OS === "android" && !Constants.isDevice) {
-      setErrorMsg(
-        "Oops, this will not work on Sketch in an Android emulator. Try it on your device!"
-      );
-    } else {
-      (async () => {
-        let { status } = await Location.requestPermissionsAsync();
-        if (status !== "granted") {
-          setErrorMsg("Permission to access location was denied");
-        }
-
-        let location = await Location.getCurrentPositionAsync({});
-        if (location) setLocation(location);
-        let from = await Location.reverseGeocodeAsync({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        });
+  /*let from = await Location.reverseGeocodeAsync({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
         from = from[0];
         if (from) {
           setFrom(from.street + " " + from.city + " " + from.country);
-        }
-      })();
-    }
-  });
-
+        }*/
   let text = "Waiting..";
   if (errorMsg) {
     text = errorMsg;
@@ -100,6 +92,7 @@ export default function MapGeol() {
             setFrom(text);
           }}
         />
+        <Button title="locate me" onPress={locateMe} />
         <View style={styles.centerText}>
           <Text>Choisir votre distination</Text>
         </View>
@@ -113,7 +106,20 @@ export default function MapGeol() {
       {errorMsg ? (
         <Text style={styles.paragraph}>{text}</Text>
       ) : (
-        <MapView style={styles.mapStyle} initialRegion={initial} onPress={(region => console.log(region))}></MapView>
+        <MapView
+          style={styles.mapStyle}
+          initialRegion={initial}
+          onPress={(location) => console.log(location.nativeEvent)}
+        >
+          <MapView.Marker
+            coordinate={myPosition.location}
+            title={"title"}
+            description={"description"}
+            onDrag={(e) => {
+              console.log("dragEnd", e.nativeEvent.coordinate);
+            }}
+          />
+        </MapView>
       )}
     </View>
   );
@@ -154,7 +160,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   mapStyle: {
-    width:'100%',
-    height:'100%',
+    width: "100%",
+    height: "100%",
   },
 });

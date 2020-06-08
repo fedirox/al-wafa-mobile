@@ -80,8 +80,8 @@ export default function CreateProfile() {
     longitudeDelta: 0.0121 * 3,
   };
   const marker = {
-    latitude: location.coords.latitude,
-    longitude: location.coords.longitude,
+    latitude: coords.latitude,
+    longitude: coords.longitude,
   };
   const marker2 = {
     latitude: 34,
