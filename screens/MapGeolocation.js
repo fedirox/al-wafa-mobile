@@ -4,13 +4,16 @@ import {
   Text,
   View,
   StyleSheet,
-  Dimensions,
   TextInput,
   Button,
+  Image,
 } from "react-native";
-import MapView from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import Constants from "expo-constants";
 import * as Location from "expo-location";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+
+import { faLocationArrow } from "@fortawesome/free-solid-svg-icons";
 export default function MapGeol() {
   const [mapLocation, setMapLocation] = useState({
     coords: {
@@ -20,31 +23,28 @@ export default function MapGeol() {
       longitudeDelta: 0.0121 * 3,
     },
   });
-  const [from, setFrom] = useState("");
-  const [destination, setDestination] = useState("");
-  const [errorMsg, setErrorMsg] = useState(null);
   const [activePosition, setActivePosition] = useState("from");
   const [myPosition, setMyPosition] = useState({
     location: {
-      latitude: 36.803998,
-      longitude: 10.1698,
+      latitude: 36.80396,
+      longitude: 10.169,
     },
   });
   const [myPositionName, setMyPositionName] = useState("");
+  const [myDesitination, setMyDesitination] = useState({
+    location: {
+      latitude: 36.803998,
+      longitude: 10.158,
+    },
+  });
+  const [myDesitinationName, setMyDesitinationName] = useState("");
   changePostion = (location) => {
     switch (activePosition) {
       case "from":
-        setMyPosition({
-          location: location,
-        });
-        (async () => {
-          let { name } = await getLocationName(
-            location.latitude,
-            location.longitude
-          );
-          setMyPositionName(name);
-        })();
+        changeMyPosition(location);
         break;
+      case "destination":
+        changeDestination(location);
     }
   };
   const locateMe = () => {
@@ -59,7 +59,6 @@ export default function MapGeol() {
           setErrorMsg("Permission to access location was denied");
         } else {
           let location = await Location.getCurrentPositionAsync({});
-          console.log(location);
           if (location) {
             setMapLocation({
               coords: {
@@ -69,16 +68,7 @@ export default function MapGeol() {
                 longitudeDelta: 0.0121 * 3,
               },
             });
-            let { name } = await getLocationName(
-              location.coords.latitude,
-              location.coords.longitude
-            );
-            setMyPosition({
-              location: {
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-              },
-            });
+            changeMyPosition(location.coords);
           } else {
             console.log("none");
           }
@@ -86,68 +76,86 @@ export default function MapGeol() {
       })();
     }
   };
-  const getLocationName = async (latitude, longitude) => {
-    let response = await Location.reverseGeocodeAsync({
-      latitude: latitude,
-      longitude: longitude,
+  const changeDestination = (coordinate) => {
+    setMyDesitination({
+      location: coordinate,
     });
-    if (response) {
-      response = response[0];
-    }
-    return response;
+    console.log(myDesitination);
   };
 
-  let text = "Waiting..";
-  if (errorMsg) {
-    text = errorMsg;
-  } else if (mapLocation) {
-    text = JSON.stringify(mapLocation);
-  }
+  const changeMyPosition = (coordinate) => {
+    setMyPosition({
+      location: coordinate,
+    });
+    console.log(myPosition);
+  };
+
+  
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.centerText}>
-          <Text>Position Actuelle</Text>
+      <View style={styles.from}>
+        <View style={styles.inputWrapper}>
+          <TextInput style={styles.input}></TextInput>
+          <FontAwesomeIcon icon={faLocationArrow} onPress={locateMe}></FontAwesomeIcon>
+          <View
+            style={
+              activePosition === "from"
+                ? styles.activerPointer
+                : styles.pointerWrapper
+            }
+            onTouchEnd={()=>setActivePosition("from")}
+          >
+            <Image
+              style={styles.pointer}
+              source={require("../assets/mylocation.png")}
+            ></Image>
+          </View>
         </View>
-
-        <TextInput
-          style={styles.textInput}
-          value={myPositionName}
-          onChangeText={(text) => {
-            setMyPositionName(text);
-          }}
-        />
-        <Button title="locate me" onPress={locateMe} />
-        <View style={styles.centerText}>
-          <Text>Choisir votre distination</Text>
+        <View style={styles.inputWrapper}>
+          <TextInput style={styles.input}></TextInput>
+          <View
+            style={
+              activePosition === "destination"
+                ? styles.activerPointer
+                : styles.pointerWrapper
+            }
+            onTouchEnd={()=>setActivePosition("destination")}
+          >
+            <Image
+              style={styles.pointer}
+              source={require("../assets/location.png")}
+            ></Image>
+          </View>
         </View>
       </View>
-      <TextInput
-        style={styles.textInput}
-        value={destination}
-        onChangeText={(text) => setDestination(text)}
-      />
-      {errorMsg ? (
-        <Text style={styles.paragraph}>{text}</Text>
-      ) : (
-        <MapView
-          style={styles.mapStyle}
-          initialRegion={mapLocation.coords}
-          region={mapLocation.coords}
-          onPress={(location) =>
-            changePostion(location?.nativeEvent.coordinate)
+      <MapView
+        style={styles.mapStyle}
+        initialRegion={mapLocation.coords}
+        region={mapLocation.coords}
+        onRegionChange={(region) => setMapLocation(region)}
+        onPress={(event) => changePostion(event?.nativeEvent.coordinate)}
+      >
+        <Marker
+          coordinate={myPosition.location}
+          image={require("../assets/mylocation.png")}
+          title={myPositionName}
+          description={"from"}
+          onDragEnd={(event) => changeMyPosition(event?.nativeEvent.coordinate)}
+          draggable={true}
+        />
+        <Marker
+          image={require("../assets/location.png")}
+          style={{ backgroundColor: "black" }}
+          coordinate={myDesitination.location}
+          title={myDesitinationName}
+          description={"to"}
+          onDragEnd={(event) =>
+            changeDestination(event?.nativeEvent.coordinate)
           }
-        >
-          <MapView.Marker
-            coordinate={myPosition.location}
-            title={myPosition.name}
-            description={"description"}
-            onDrag={(e) => {
-              console.log("dragEnd", e.nativeEvent.coordinate);
-            }}
-          />
-        </MapView>
-      )}
+          draggable={true}
+        />
+      </MapView>
     </View>
   );
 }
@@ -155,39 +163,56 @@ export default function MapGeol() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#A1EDBF",
-    padding: 8,
+    backgroundColor: "#000",
+    padding: 20,
   },
-  paragraph: {
-    margin: 24,
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  header: {
-    height: 100,
-  },
-  backIcon: {
-    fontSize: 25,
-    color: "blue",
-  },
-  textInput: {
-    backgroundColor: "#E6E8E9",
+  from: {
+    backgroundColor: "#fff",
+    width: '100%',
+    height: 160,
+    marginBottom: 20,
+    padding: 10,
     borderRadius: 10,
-    color: "#8E8E93",
-    fontSize: 17,
-    height: 43,
-    margin: 8,
   },
-
-  centerText: {
-    flex: 5,
+  inputWrapper: {
     flexDirection: "row",
-    margin: 8,
     alignItems: "center",
+    width: "100%",
+  },
+  input: {
+    backgroundColor: "#fff",
+    width: "80%",
+    fontSize: 12,
+    marginTop: 10,
+    marginBottom: 10,
+    borderColor: "gray",
+    borderWidth: 1,
+    borderRadius: 10,
+    marginRight: 10,
+    padding: 10,
+  },
+  activerPointer: {
+    borderRadius: 10,
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "gray",
+    marginLeft: 10,
+    padding: 10,
+  },
+  pointerWrapper: {
+    borderRadius: 20,
+    flex: 1,
+    justifyContent: "center",
+    marginLeft: 10,
+    padding: 10,
+  },
+  pointer: {
+    width: 20,
+    alignSelf: "center",
+    height: 20,
   },
   mapStyle: {
     width: "100%",
-    height: "100%",
+    height: 450,
   },
 });
