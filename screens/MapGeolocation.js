@@ -29,6 +29,7 @@ export default function MapGeol() {
       latitude: 36.803998,
       longitude: 10.1698,
     },
+    name:""
   });
   const locateMe = () => {
     if (Platform.OS === "android" && !Constants.isDevice) {
@@ -45,27 +46,32 @@ export default function MapGeol() {
           let location = await Location.getCurrentPositionAsync({});
           if (location) {
             setLocation(location);
+            let {name}= await getLocationName(location.coords.latitude,location.coords.longitude);
             setMyPosition({
               active: myPosition.active,
               location: {
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
               },
+              name:name
             });
+           
           }
         }
       })();
     }
   };
-
-  /*let from = await Location.reverseGeocodeAsync({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
+const getLocationName=async(latitude,longitude)=>{
+  let response = await Location.reverseGeocodeAsync({
+            latitude: latitude,
+            longitude: longitude,
           });
-        from = from[0];
-        if (from) {
-          setFrom(from.street + " " + from.city + " " + from.country);
-        }*/
+        if (response) { 
+          response = response[0]; 
+        }
+        return response
+}
+ 
   let text = "Waiting..";
   if (errorMsg) {
     text = errorMsg;
@@ -113,7 +119,7 @@ export default function MapGeol() {
         >
           <MapView.Marker
             coordinate={myPosition.location}
-            title={"title"}
+            title={myPosition.name}
             description={"description"}
             onDrag={(e) => {
               console.log("dragEnd", e.nativeEvent.coordinate);
