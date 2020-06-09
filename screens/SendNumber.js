@@ -1,9 +1,9 @@
 import React, { Component } from "react";
 import { View, StyleSheet, Text, Button } from "react-native";
 import IntlPhoneInput from "react-native-intl-phone-input";
-import axios from "axios"; 
+import axios from "axios";
 
-export default class SendNumber extends Component { 
+export default class SendNumber extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -39,19 +39,22 @@ export default class SendNumber extends Component {
       });
     } else {
       console.log(this.state);
-      let url = "http://192.168.1.6:3000/users/send-code";
-      let phoneNumber = this.state.dialCode + this.state.unmaskedPhoneNumber
-      // axios.post(url, {
-      //   mobile_number: phoneNumber,
-      //   verificationMethod: "sms",
-      // })
-      //   .then((response) => {
-      //     console.log(response); 
-          this.props.navigation.navigate('CodeVerification', { phone: phoneNumber })
-        // })
-        // .catch((error) => {
-        //   console.log(error);
-        // });
+      let url = "http://192.168.43.53:3000/users/send-code";
+      let phoneNumber = this.state.dialCode + this.state.unmaskedPhoneNumber;
+      axios
+        .post(url, {
+          mobile_number: phoneNumber,
+          verificationMethod: "sms",
+        })
+        .then((response) => {
+          console.log(response);
+          this.props.navigation.navigate("CodeVerification", {
+            phone: phoneNumber,
+          });
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     }
   }
   render() {

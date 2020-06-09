@@ -23,21 +23,24 @@ export default function MapGeol() {
       longitudeDelta: 0.0121 * 3,
     },
   });
-  const [activePosition, setActivePosition] = useState("from");
   const [myPosition, setMyPosition] = useState({
     location: {
       latitude: 36.80396,
       longitude: 10.169,
     },
   });
-  const [myPositionName, setMyPositionName] = useState("");
   const [myDesitination, setMyDesitination] = useState({
     location: {
       latitude: 36.803998,
       longitude: 10.158,
     },
   });
+
+  const [myPositionName, setMyPositionName] = useState("");
   const [myDesitinationName, setMyDesitinationName] = useState("");
+
+  const [activePosition, setActivePosition] = useState("from");
+
   changePostion = (location) => {
     switch (activePosition) {
       case "from":
@@ -49,14 +52,14 @@ export default function MapGeol() {
   };
   const locateMe = () => {
     if (Platform.OS === "android" && !Constants.isDevice) {
-      setErrorMsg(
+      console.log(
         "Oops, this will not work on Sketch in an Android emulator. Try it on your device!"
       );
     } else {
       (async () => {
         let { status } = await Location.requestPermissionsAsync();
         if (status !== "granted") {
-          setErrorMsg("Permission to access location was denied");
+          console.log("Permission to access location was denied");
         } else {
           let location = await Location.getCurrentPositionAsync({});
           if (location) {
@@ -90,21 +93,22 @@ export default function MapGeol() {
     console.log(myPosition);
   };
 
-  
-
   return (
     <View style={styles.container}>
       <View style={styles.from}>
         <View style={styles.inputWrapper}>
           <TextInput style={styles.input}></TextInput>
-          <FontAwesomeIcon icon={faLocationArrow} onPress={locateMe}></FontAwesomeIcon>
+          <FontAwesomeIcon
+            icon={faLocationArrow}
+            onPress={locateMe}
+          ></FontAwesomeIcon>
           <View
             style={
               activePosition === "from"
                 ? styles.activerPointer
                 : styles.pointerWrapper
             }
-            onTouchEnd={()=>setActivePosition("from")}
+            onTouchEnd={() => setActivePosition("from")}
           >
             <Image
               style={styles.pointer}
@@ -120,7 +124,7 @@ export default function MapGeol() {
                 ? styles.activerPointer
                 : styles.pointerWrapper
             }
-            onTouchEnd={()=>setActivePosition("destination")}
+            onTouchEnd={() => setActivePosition("destination")}
           >
             <Image
               style={styles.pointer}
@@ -143,6 +147,7 @@ export default function MapGeol() {
           description={"from"}
           onDragEnd={(event) => changeMyPosition(event?.nativeEvent.coordinate)}
           draggable={true}
+          onPress={() => setActivePosition("from")}
         />
         <Marker
           image={require("../assets/location.png")}
@@ -154,6 +159,7 @@ export default function MapGeol() {
             changeDestination(event?.nativeEvent.coordinate)
           }
           draggable={true}
+          onPress={() => setActivePosition("destination")}
         />
       </MapView>
     </View>
@@ -168,7 +174,7 @@ const styles = StyleSheet.create({
   },
   from: {
     backgroundColor: "#fff",
-    width: '100%',
+    width: "100%",
     height: 160,
     marginBottom: 20,
     padding: 10,

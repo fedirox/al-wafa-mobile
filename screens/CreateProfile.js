@@ -44,7 +44,7 @@ export default function CreateProfile({ route, navigation }) {
   };
 
   const checkNumber = () => {
-    let url = "http://192.168.1.6:3000/users/add/one";
+    let url = "http://192.168.43.53:3000/users/add/one";
 
     let err = 0;
     let nameCheker = /^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/u;
@@ -69,6 +69,7 @@ export default function CreateProfile({ route, navigation }) {
           })
         .then((response) => {
           console.log(response.data);
+          navigation.navigate("MapGeolocation");
         })
         .catch((error) => {
           console.log(error);
