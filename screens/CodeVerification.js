@@ -1,65 +1,160 @@
-import React, { Component, useState } from "react";
-import { View, StyleSheet, Text, Button, TextInput } from "react-native";
+import React, { useState } from "react";
+import { API_URL } from "react-native-dotenv";
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  Text,
+  ActivityIndicator,
+  AsyncStorage,
+} from "react-native";
 import axios from "axios";
+import { goTo, goToWithParams } from "../helpers/CostumNavigation";
 
-export default function SendNumber({ route, navigation }) {
+export default function SendNumber({ navigation }) {
   const [code, setCode] = useState("");
   const [errorMessage, setErrorMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const { phone } = route.params;
-  const checkNumber = () => {
-    let url = "http://192.168.43.53:3000/users/verify-code";
-    axios
+  const phone = navigation.getParam("phone");
+
+  const save = async (token) => {
+    try {
+      await AsyncStorage.setItem("TOKEN", token);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const sendCode = async () => {
+    setLoading(true);
+    setErrorMessage("");
+
+    let url = `${API_URL}/users/code`;
+    await axios
       .post(url, {
         mobile_number: phone,
         verificationCode: code,
       })
       .then((response) => {
-        console.log(response);
-        navigation.navigate("CreateProfile", { phone: phone });
+        console.log(response.data);
+        if (response.data.new) {
+          navigation.dispatch(goToWithParams("CreateProfile", {phone: phone}));
+        } else {
+          save(response.data.token);
+          navigation.dispatch(goTo("MapGeolocation"));
+        }
       })
       .catch((error) => {
-        setErrorMessage("Try to put a valid code!");
+        setErrorMessage("Le code que vous avez entré est invalide");
       });
+    setTimeout(function () {
+      setLoading(false);
+    }, 1000);
   };
+  if (loading) {
+    return (
+      <View style={styles.body}>
+        <View style={[styles.container, styles.horizontal]}>
+          <ActivityIndicator size="large" color="#f26522" />
+        </View>
+      </View>
+    );
+  }
   return (
-    <View style={styles.container}>
-      {errorMessage && <Text style={{ color: "#fff" }}>{errorMessage}</Text>}
-      <TextInput
-        style={styles.codeInput}
-        keyboardType={"numeric"}
-        maxLength={6}
-        onChangeText={(text) => {
-          setCode(text);
-          setErrorMessage(null);
-        }}
-      />
-      <Button
-        title="Learn More"
-        color="#841584"
-        disabled={!code.match(/^[0-9]{6}$/g)}
-        accessibilityLabel="Learn more about this purple button"
-        onPress={() => checkNumber()}
-      />
+    <View style={styles.body}>
+      <View style={styles.container}>
+        <Image
+          style={styles.logo}
+          source={require("../assets/logo.png")}
+        ></Image>
+        <Text style={styles.desiption}>
+          Un OTP a été envoyé, veuillez saisir le code reçu sur le numéro{" "}
+          {phone}
+        </Text>
+        <TextInput
+          placeholder="Votre Code"
+          style={styles.numberInput}
+          value={code}
+          onChangeText={setCode}
+          maxLength={6}
+          keyboardType="numeric"
+        ></TextInput>
+        <Text style={styles.errorText}>{errorMessage}</Text>
+        <TouchableOpacity style={styles.submitButtonWrapper}>
+          <Text onPress={() => sendCode()} style={styles.submitButton}>
+            Envoyer
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  body: {
+    flex: 1,
+    backgroundColor: "#f26522",
+    color: "#fff",
+  },
   container: {
     flex: 1,
-    backgroundColor: "#000",
-    alignItems: "center",
+    flexDirection: "column",
     justifyContent: "center",
-    paddingLeft: "10%",
-    paddingRight: "10%",
-  },
-  codeInput: {
+    margin: "5%",
     backgroundColor: "#fff",
-    width: "60%",
-    paddingLeft: 25,
-    fontSize: 40,
-    borderRadius: 20,
-    marginBottom: 20,
+    borderRadius: 10,
+    paddingRight: 50,
+    paddingLeft: 50,
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    alignSelf: "center",
+  },
+  desiption: {
+    marginTop: 40,
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  numberInput: {
+    textAlign: "center",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginTop: 30,
+    marginBottom: 10,
+    borderColor: "#f26522",
+    borderWidth: 0,
+    borderBottomWidth: 2,
+    marginRight: 10,
+    padding: 10,
+  },
+  errorText: {
+    textAlign: "left",
+    color: "red",
+    fontSize: 12,
+  },
+  submitButtonWrapper: {
+    marginTop: 20,
+    borderRadius: 10,
+  },
+  submitButton: {
+    fontWeight: "bold",
+    textAlign: "center",
+    backgroundColor: "#f26522",
+    borderRadius: 10,
+    padding: 10,
+    width: "100%",
+    color: "#fff",
+    fontSize: 20,
+  },
+  horizontal: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    padding: 10,
   },
 });
