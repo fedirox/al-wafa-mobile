@@ -9,13 +9,19 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  FlatList
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import Constants from "expo-constants";
 import * as Location from "expo-location";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { faLocationArrow } from "@fortawesome/free-solid-svg-icons";
-
+import { TouchableHighlight } from "react-native-gesture-handler";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Autocomplete from "react-native-autocomplete-input";
+import Axios from "axios";
+const adresses = [
+  "English Sydney Australia", "Estonian Sydney Australia", "Esperanto Sydney Australia"]
 export default function MapGeol({ navigation }) {
   useEffect(() => {
     locateMe();
@@ -35,12 +41,14 @@ export default function MapGeol({ navigation }) {
       longitude: 0,
     },
   });
+
   const [myDesitination, setMyDesitination] = useState({
     location: {
       latitude: 0,
       longitude: 0,
     },
   });
+  const [suggestions, setSuggestions] = useState([]);
 
   const [errorMessage, setErrorMessage] = useState("");
   const [myPositionName, setMyPositionName] = useState("");
@@ -153,7 +161,7 @@ export default function MapGeol({ navigation }) {
       Alert.alert(
         "Alert",
         "Choisissez votre destination",
-        [{ text: "OK", onPress: () => {} }],
+        [{ text: "OK", onPress: () => { } }],
         {
           cancelable: false,
         }
@@ -165,7 +173,7 @@ export default function MapGeol({ navigation }) {
       Alert.alert(
         "Alert",
         "Choisissez votre point de depart",
-        [{ text: "OK", onPress: () => {} }],
+        [{ text: "OK", onPress: () => { } }],
         {
           cancelable: false,
         }
@@ -188,6 +196,18 @@ export default function MapGeol({ navigation }) {
     if (errorMessage) {
     }
   };
+
+  filterAdresses = (searchedText) => {
+    return adresses.filter(function (adress) {
+      return adress.street.toLowerCase().includes(searchedText.toLowerCase())
+    });
+  };
+  const getSuggestion = (text) => {
+    Axios.get("http://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest?text=" + text + "&countryCode=TN&f=pjson&fbclid=IwAR0mmAxLdWPpnKoXZvVxy7iPm1NJqsmP2Vbid7uG-sGpk4SoE8gAD0ro26M").then(response => {
+      setSuggestions(response.data.suggestions.map(suggestion => suggestion.text))
+    })
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -195,14 +215,29 @@ export default function MapGeol({ navigation }) {
         <View style={styles.formWrapper}>
           <View style={styles.form}>
             <View style={styles.inputWrapper}>
-              <TextInput
+              {/* <TextInput
                 value={myPositionName}
                 placeholder="Point de depart"
-                onChange={(e) => setMyPositionName(e.nativeEvent.text)}
+                onChange={(e) => {
+                  setMyPositionName(e.nativeEvent.text);
+                   
+                }} 
                 style={styles.input}
+                 onChangeText={text=>filterAdresses(text)}
                 onTouchEnd={() => setActivePosition("from")}
-              ></TextInput>
-
+              ></TextInput> 
+                 */}
+              <Autocomplete
+                style={styles.input}
+                data={suggestions}
+                defaultValue={myPositionName}
+                onChangeText={(text) => { setMyPositionName(text); getSuggestion(text) }}
+                renderItem={({ item, i }) => (
+                  <TouchableOpacity onPress={() => setMyPositionName(item)}>
+                    <Text>{item}</Text>
+                  </TouchableOpacity>
+                )}
+              />
               <View
                 style={
                   activePosition === "from"
@@ -256,38 +291,38 @@ export default function MapGeol({ navigation }) {
             </View>
           </View>
         ) : (
-          <MapView
-            style={styles.mapStyle}
-            initialRegion={mapLocation.coords}
-            region={mapLocation.coords}
-            onRegionChange={(region) => setMapLocation(region)}
-            onPress={(event) => changePostion(event?.nativeEvent.coordinate)}
-          >
-            <Marker
-              coordinate={myPosition.location}
-              image={require("../assets/mylocation.png")}
-              title={"From"}
-              description={"Point de depar"}
-              onDragEnd={(event) =>
-                changeMyPosition(event?.nativeEvent.coordinate)
-              }
-              draggable={true}
-              onPress={() => setActivePosition("from")}
-            />
-            <Marker
-              image={require("../assets/location.png")}
-              style={{ backgroundColor: "black" }}
-              coordinate={myDesitination.location}
-              title={"To"}
-              description={"Destination"}
-              onDragEnd={(event) =>
-                changeDestination(event?.nativeEvent.coordinate)
-              }
-              draggable={true}
-              onPress={() => setActivePosition("destination")}
-            />
-          </MapView>
-        )}
+            <MapView
+              style={styles.mapStyle}
+              initialRegion={mapLocation.coords}
+              region={mapLocation.coords}
+              onRegionChange={(region) => setMapLocation(region)}
+              onPress={(event) => changePostion(event?.nativeEvent.coordinate)}
+            >
+              <Marker
+                coordinate={myPosition.location}
+                image={require("../assets/mylocation.png")}
+                title={"From"}
+                description={"Point de depar"}
+                onDragEnd={(event) =>
+                  changeMyPosition(event?.nativeEvent.coordinate)
+                }
+                draggable={true}
+                onPress={() => setActivePosition("from")}
+              />
+              <Marker
+                image={require("../assets/location.png")}
+                style={{ backgroundColor: "black" }}
+                coordinate={myDesitination.location}
+                title={"To"}
+                description={"Destination"}
+                onDragEnd={(event) =>
+                  changeDestination(event?.nativeEvent.coordinate)
+                }
+                draggable={true}
+                onPress={() => setActivePosition("destination")}
+              />
+            </MapView>
+          )}
       </View>
       <View style={styles.footer}>
         <TouchableOpacity style={styles.submitButtonWrapper}>
@@ -319,6 +354,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "left",
     fontSize: 16,
+  },
+  autocompleteContainer: {
+    borderWidth: 0,
+    zIndex: 1
   },
   formWrapper: {
     flexDirection: "row",

@@ -9,18 +9,18 @@ import Confirmation from "../screens/Confirmation";
 import Remerciment from "../screens/Remerciment";
 
 const screens = {
-  Home: {
-    screen: Home,
-  },
-  SendNumber: {
-    screen: SendNumber,
-  },
-  CodeVerification: {
-    screen: CodeVerification,
-  },
-  CreateProfile: {
-    screen: CreateProfile,
-  },
+  // Home: {
+  //   screen: Home,
+  // },
+  // SendNumber: {
+  //   screen: SendNumber,
+  // },
+  // CodeVerification: {
+  //   screen: CodeVerification,
+  // },
+  // CreateProfile: {
+  //   screen: CreateProfile,
+  // },
   MapGeolocation: {
     screen: MapGeolocation,
   },
