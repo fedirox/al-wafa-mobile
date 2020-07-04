@@ -203,10 +203,30 @@ export default function MapGeol({ navigation }) {
     });
   };
   const getSuggestion = (text) => {
-    Axios.get("http://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest?text=" + text + "&countryCode=TN&f=pjson&fbclid=IwAR0mmAxLdWPpnKoXZvVxy7iPm1NJqsmP2Vbid7uG-sGpk4SoE8gAD0ro26M").then(response => {
-      setSuggestions(response.data.suggestions.map(suggestion => suggestion.text))
+    https://search.osmnames.org/q/le.js?key=dgb7TgC5zR0YpsAqbEgb
+    Axios.get("http://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest?text=" + text + "&countryCode=TN&f=pjson").then(response => {
+      if (Array.isArray(response.data.suggestions)) {
+        let suggs = response.data.suggestions.filter(suggestion => !suggestion.isCollection).map(suggestion => suggestion.text)
+        setSuggestions(suggs)
+
+      }
     })
   }
+  const getLocationByAddress = async (address) => {
+    await Location.geocodeAsync(address)
+      .then((data) => {
+        const { longitude, latitude } = data[0]
+        setMyPosition({
+          location: {
+            latitude: latitude,
+            longitude: longitude
+          }
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
   return (
     <View style={styles.container}>
@@ -233,10 +253,12 @@ export default function MapGeol({ navigation }) {
                 defaultValue={myPositionName}
                 onChangeText={(text) => { setMyPositionName(text); getSuggestion(text) }}
                 renderItem={({ item, i }) => (
-                  <TouchableOpacity onPress={() => setMyPositionName(item)}>
+                  <TouchableOpacity onPress={() => { setMyPositionName(item); getLocationByAddress(item) }}>
                     <Text>{item}</Text>
                   </TouchableOpacity>
                 )}
+                keyExtractor={(item, index) => index.toString()}
+
               />
               <View
                 style={
