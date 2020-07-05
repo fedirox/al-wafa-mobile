@@ -9,17 +9,20 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  FlatList
+  FlatList,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import Constants from "expo-constants";
 import * as Location from "expo-location";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { faLocationArrow } from "@fortawesome/free-solid-svg-icons";
-import { GEO_NAMES, GEO_NAMES_OPT } from "react-native-dotenv";
+import { GEOCODE_URL, GEO_NAMES, GEO_NAMES_OPT } from "react-native-dotenv";
 import Axios from "axios";
 const adresses = [
-  "English Sydney Australia", "Estonian Sydney Australia", "Esperanto Sydney Australia"]
+  "English Sydney Australia",
+  "Estonian Sydney Australia",
+  "Esperanto Sydney Australia",
+];
 export default function MapGeol({ navigation }) {
   useEffect(() => {
     locateMe();
@@ -48,7 +51,6 @@ export default function MapGeol({ navigation }) {
   });
   const [suggestions, setSuggestions] = useState([]);
 
-  const [errorMessage, setErrorMessage] = useState("");
   const [myPositionName, setMyPositionName] = useState("");
   const [myDesitinationName, setMyDesitinationName] = useState("");
 
@@ -56,13 +58,31 @@ export default function MapGeol({ navigation }) {
   const [loading, setLoading] = useState(false);
 
   changePostion = (location) => {
-    switch (activePosition) {
-      case "from":
-        changeMyPosition(location);
-        break;
-      case "destination":
-        changeDestination(location);
-    }
+    Axios.get(
+      `${GEOCODE_URL}/reverseGeocode?location=${location.longitude},${location.latitude}&langCode=fr&&f=json`
+    )
+      .then((response) => {
+        if (
+          response.data.address &&
+          response.data.address.CountryCode === "TUN"
+        ) {
+          switch (activePosition) {
+            case "from":
+              setMyPositionName(response.data.address.LongLabel);
+              setMyPosition({
+                location: location,
+              });
+              break;
+            case "destination":
+              setMyDesitinationName(response.data.address.LongLabel);
+              setMyDesitination({
+                location: location,
+              });
+              break;
+          }
+        }
+      })
+      .catch((err) => console.log(err));
   };
   const locateMe = () => {
     if (Platform.OS === "android" && !Constants.isDevice) {
@@ -86,7 +106,8 @@ export default function MapGeol({ navigation }) {
                 longitudeDelta: 0.0121 * 3,
               },
             });
-            changeMyPosition({
+            setActivePosition("from");
+            changePostion({
               latitude: location.coords.latitude,
               longitude: location.coords.longitude,
             });
@@ -101,56 +122,6 @@ export default function MapGeol({ navigation }) {
       })();
     }
   };
-  const reverseCodeMyDestination = async (coordinate) => {
-    await Location.reverseGeocodeAsync(coordinate)
-      .then((data) => {
-        setMyDesitinationName(formatLocation(data[0]));
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-  const reverseCodeMyPosition = async (coordinate) => {
-    await Location.reverseGeocodeAsync(coordinate)
-      .then((data) => {
-        setMyPositionName(formatLocation(data[0]));
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
-  const formatLocation = (data) => {
-    let location = "";
-    if (data.name && !data.street) {
-      location += data.name;
-    } else if (!data.name && data.street) {
-      location += data.street;
-    } else if (data.name && data.street) {
-      if (data.name === data.street) {
-        location += data.name;
-      } else if (/^\d+$/.test(data.name)) {
-        location += `${data.name} ${data.street}`;
-      } else {
-        location += `${data.name}, ${data.street}`;
-      }
-    }
-    return `${location}, ${data.region}, ${data.country}`;
-  };
-  const changeDestination = (coordinate) => {
-    setMyDesitination({
-      location: coordinate,
-    });
-    reverseCodeMyDestination(coordinate);
-  };
-
-  const changeMyPosition = (coordinate) => {
-    setMyPosition({
-      location: coordinate,
-    });
-    reverseCodeMyPosition(coordinate);
-  };
-
   const confirmDestination = () => {
     if (
       myDesitination.location.latitude === 0 ||
@@ -159,7 +130,7 @@ export default function MapGeol({ navigation }) {
       Alert.alert(
         "Alert",
         "Choisissez votre destination",
-        [{ text: "OK", onPress: () => { } }],
+        [{ text: "OK", onPress: () => {} }],
         {
           cancelable: false,
         }
@@ -171,7 +142,7 @@ export default function MapGeol({ navigation }) {
       Alert.alert(
         "Alert",
         "Choisissez votre point de depart",
-        [{ text: "OK", onPress: () => { } }],
+        [{ text: "OK", onPress: () => {} }],
         {
           cancelable: false,
         }
@@ -190,30 +161,28 @@ export default function MapGeol({ navigation }) {
 
       navigation.navigate("Confirmation", { travel: travel });
     }
-
-    if (errorMessage) {
-    }
   };
 
   filterAdresses = (searchedText) => {
     return adresses.filter(function (adress) {
-      return adress.street.toLowerCase().includes(searchedText.toLowerCase())
+      return adress.street.toLowerCase().includes(searchedText.toLowerCase());
     });
   };
   const getSuggestion = (text) => {
-    Axios.get(GEO_NAMES + text + GEO_NAMES_OPT).then(response => {
+    Axios.get(GEO_NAMES + text + GEO_NAMES_OPT).then((response) => {
       if (Array.isArray(response.data.suggestions)) {
-        let suggs = response.data.suggestions.filter(suggestion => !suggestion.isCollection).map(suggestion => suggestion.text)
-        setSuggestions(suggs)
-
+        let suggs = response.data.suggestions
+          .filter((suggestion) => !suggestion.isCollection)
+          .map((suggestion) => suggestion.text);
+        setSuggestions(suggs);
       }
-    })
-  }
+    });
+  };
   const getLocationByAddress = async (address) => {
     await Location.geocodeAsync(address)
       .then((data) => {
-        const { longitude, latitude } = data[0]
-        changePostion({ latitude, longitude })
+        const { longitude, latitude } = data[0];
+        changePostion({ latitude, longitude });
       })
       .catch((error) => {
         console.log(error);
@@ -231,14 +200,24 @@ export default function MapGeol({ navigation }) {
                 value={myPositionName}
                 placeholder="Point de depart"
                 style={styles.input}
-                onChangeText={text => { setMyPositionName(text); getSuggestion(text) }}
+                onChangeText={(text) => {
+                  setMyPositionName(text);
+                  getSuggestion(text);
+                }}
                 onTouchEnd={() => setActivePosition("from")}
               ></TextInput>
-              <FlatList 
-              style={styles.autocompleteContainer}
+              <FlatList
+                style={styles.autocompleteContainer}
                 data={suggestions}
                 renderItem={({ item, i }) => (
-                  <TouchableOpacity style={styles.item} onPress={() => { setMyPositionName(item); getLocationByAddress(item); setSuggestions([]) }}>
+                  <TouchableOpacity
+                    style={styles.item}
+                    onPress={() => {
+                      setMyPositionName(item);
+                      getLocationByAddress(item);
+                      setSuggestions([]);
+                    }}
+                  >
                     <Text>{item}</Text>
                   </TouchableOpacity>
                 )}
@@ -297,38 +276,40 @@ export default function MapGeol({ navigation }) {
             </View>
           </View>
         ) : (
-            <MapView
-              style={styles.mapStyle}
-              initialRegion={mapLocation.coords}
-              region={mapLocation.coords}
-              onRegionChange={(region) => setMapLocation(region)}
-              onPress={(event) => changePostion(event?.nativeEvent.coordinate)}
-            >
-              <Marker
-                coordinate={myPosition.location}
-                image={require("../assets/mylocation.png")}
-                title={"From"}
-                description={"Point de depar"}
-                onDragEnd={(event) =>
-                  changeMyPosition(event?.nativeEvent.coordinate)
-                }
-                draggable={true}
-                onPress={() => setActivePosition("from")}
-              />
-              <Marker
-                image={require("../assets/location.png")}
-                style={{ backgroundColor: "black" }}
-                coordinate={myDesitination.location}
-                title={"To"}
-                description={"Destination"}
-                onDragEnd={(event) =>
-                  changeDestination(event?.nativeEvent.coordinate)
-                }
-                draggable={true}
-                onPress={() => setActivePosition("destination")}
-              />
-            </MapView>
-          )}
+          <MapView
+            style={styles.mapStyle}
+            initialRegion={mapLocation.coords}
+            region={mapLocation.coords}
+            onRegionChange={(region) => setMapLocation(region)}
+            onPress={(event) => changePostion(event?.nativeEvent.coordinate)}
+          >
+            <Marker
+              coordinate={myPosition.location}
+              image={require("../assets/mylocation.png")}
+              title={"From"}
+              description={"Point de depar"}
+              onDragStart={() => setActivePosition("from")}
+              onDragEnd={(event) =>
+                changePostion(event?.nativeEvent.coordinate)
+              }
+              draggable={true}
+              onPress={() => setActivePosition("from")}
+            />
+            <Marker
+              image={require("../assets/location.png")}
+              style={{ backgroundColor: "black" }}
+              coordinate={myDesitination.location}
+              title={"To"}
+              description={"Destination"}
+              onDragStart={() => setActivePosition("destination")}
+              onDragEnd={(event) =>
+                changePostion(event?.nativeEvent.coordinate)
+              }
+              draggable={true}
+              onPress={() => setActivePosition("destination")}
+            />
+          </MapView>
+        )}
       </View>
       <View style={styles.footer}>
         <TouchableOpacity style={styles.submitButtonWrapper}>
@@ -364,17 +345,16 @@ const styles = StyleSheet.create({
   autocompleteContainer: {
     flex: 1,
     left: 0,
-    position: 'absolute',
+    position: "absolute",
     right: 0,
     top: 50,
     zIndex: 1,
-    borderColor:"gray",
-    borderRadius:2,
-
+    borderColor: "gray",
+    borderRadius: 2,
   },
   item: {
     borderTopWidth: 1,
-    borderTopColor:"gray",
+    borderTopColor: "gray",
     backgroundColor: "white",
     borderColor: "black",
   },
