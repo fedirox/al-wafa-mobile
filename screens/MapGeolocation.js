@@ -16,9 +16,7 @@ import Constants from "expo-constants";
 import * as Location from "expo-location";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { faLocationArrow } from "@fortawesome/free-solid-svg-icons";
-import { TouchableHighlight } from "react-native-gesture-handler";
-import { SafeAreaView } from "react-native-safe-area-context";
-import Autocomplete from "react-native-autocomplete-input";
+import { GEO_NAMES, GEO_NAMES_OPT } from "react-native-dotenv";
 import Axios from "axios";
 const adresses = [
   "English Sydney Australia", "Estonian Sydney Australia", "Esperanto Sydney Australia"]
@@ -203,8 +201,7 @@ export default function MapGeol({ navigation }) {
     });
   };
   const getSuggestion = (text) => {
-    https://search.osmnames.org/q/le.js?key=dgb7TgC5zR0YpsAqbEgb
-    Axios.get("http://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest?text=" + text + "&countryCode=TN&f=pjson").then(response => {
+    Axios.get(GEO_NAMES + text + GEO_NAMES_OPT).then(response => {
       if (Array.isArray(response.data.suggestions)) {
         let suggs = response.data.suggestions.filter(suggestion => !suggestion.isCollection).map(suggestion => suggestion.text)
         setSuggestions(suggs)
@@ -216,12 +213,7 @@ export default function MapGeol({ navigation }) {
     await Location.geocodeAsync(address)
       .then((data) => {
         const { longitude, latitude } = data[0]
-        setMyPosition({
-          location: {
-            latitude: latitude,
-            longitude: longitude
-          }
-        });
+        changePostion({ latitude, longitude })
       })
       .catch((error) => {
         console.log(error);
@@ -235,31 +227,23 @@ export default function MapGeol({ navigation }) {
         <View style={styles.formWrapper}>
           <View style={styles.form}>
             <View style={styles.inputWrapper}>
-              {/* <TextInput
+              <TextInput
                 value={myPositionName}
                 placeholder="Point de depart"
-                onChange={(e) => {
-                  setMyPositionName(e.nativeEvent.text);
-                   
-                }} 
                 style={styles.input}
-                 onChangeText={text=>filterAdresses(text)}
+                onChangeText={text => { setMyPositionName(text); getSuggestion(text) }}
                 onTouchEnd={() => setActivePosition("from")}
-              ></TextInput> 
-                 */}
-              <Autocomplete
-                style={styles.input}
+              ></TextInput>
+              <FlatList 
+              style={styles.autocompleteContainer}
                 data={suggestions}
-                defaultValue={myPositionName}
-                onChangeText={(text) => { setMyPositionName(text); getSuggestion(text) }}
                 renderItem={({ item, i }) => (
-                  <TouchableOpacity onPress={() => { setMyPositionName(item); getLocationByAddress(item) }}>
+                  <TouchableOpacity style={styles.item} onPress={() => { setMyPositionName(item); getLocationByAddress(item); setSuggestions([]) }}>
                     <Text>{item}</Text>
                   </TouchableOpacity>
                 )}
                 keyExtractor={(item, index) => index.toString()}
-
-              />
+              ></FlatList>
               <View
                 style={
                   activePosition === "from"
@@ -378,8 +362,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   autocompleteContainer: {
-    borderWidth: 0,
-    zIndex: 1
+    flex: 1,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 50,
+    zIndex: 1,
+    borderColor:"gray",
+    borderRadius:2,
+
+  },
+  item: {
+    borderTopWidth: 1,
+    borderTopColor:"gray",
+    backgroundColor: "white",
+    borderColor: "black",
   },
   formWrapper: {
     flexDirection: "row",
