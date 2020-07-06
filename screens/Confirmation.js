@@ -7,10 +7,8 @@ import {
   AsyncStorage,
   ActivityIndicator,
 } from "react-native";
-import { getDistance, getPreciseDistance } from "geolib";
 import { API_URL } from "react-native-dotenv";
 import axios from "axios";
-import { goTo } from "../helpers/CostumNavigation";
 
 export default function Confirmation({ navigation }) {
   const [price, setPrice] = useState("");
@@ -23,24 +21,25 @@ export default function Confirmation({ navigation }) {
     try {
       let token = await AsyncStorage.getItem("TOKEN");
       if (token) {
-        let url = `${API_URL}/users/login`;
+        let url = `${API_URL}/reservations/get/price`;
         await axios
           .post(
             url,
-            {},
+            {travel: travel},
             {
               headers: { "x-auth-token": token },
             }
           )
           .then((response) => {
-            setLoading(false);
             setPhone(response.data.phone);
+            setPrice(response.data.price)
+            setLoading(false);
           })
           .catch((error) => {
-            navigation.dispatch(goTo("SendNumber"));
+            navigation.navigate("SendNumber");
           });
       } else {
-        navigation.dispatch(goTo("SendNumber"));
+        navigation.navigate("SendNumber");
       }
     } catch (error) {
       console.log(error);
@@ -49,15 +48,6 @@ export default function Confirmation({ navigation }) {
 
   useEffect(() => {
     loadNumber();
-    const distance = getPreciseDistance(
-      travel.from.location,
-      travel.to.location
-    );
-    const distanceKm = distance / 1000;
-    const distanceFinale = distanceKm + distanceKm * 0.4;
-    setPrice(
-      distanceFinale < 5 ? "5DT" : Math.round(distanceFinale + 0.4) + "DT"
-    );
   }, []);
 
   const confirmerRequete = async () => {
@@ -65,7 +55,7 @@ export default function Confirmation({ navigation }) {
       let token = await AsyncStorage.getItem("TOKEN");
 
       if (!token) {
-        navigation.dispatch(goTo("SendNumber"));
+        navigation.navigate("SendNumber");
       }
       const url = `${API_URL}/reservations/add`;
       await axios
@@ -80,7 +70,7 @@ export default function Confirmation({ navigation }) {
           }
         )
         .then(() => {
-          navigation.dispatch(goTo("Remerciment"));
+          navigation.navigate("Remerciment");
         })
         .catch((error) => {
           console.log(error);

@@ -78,7 +78,7 @@ export default function CreateProfile({ navigation }) {
         })
         .then((response) => {
           save(response.data.token);
-          navigation.dispatch(goTo("MapGeolocation"));
+          navigation.navigate("MapGeolocation");
         })
         .catch((error) => {
           console.log(error);

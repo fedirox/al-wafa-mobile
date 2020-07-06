@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, ImageBackground, AsyncStorage } from "react-native";
 import { API_URL } from "react-native-dotenv";
-import { goTo } from "../helpers/CostumNavigation";
 import axios from "axios";
 
 export default function Home({ navigation }) {
@@ -22,14 +21,14 @@ export default function Home({ navigation }) {
             }
           )
           .then(() => {
-            navigation.dispatch(goTo("MapGeolocation"));
+            navigation.navigate("MapGeolocation");
           })
           .catch((error) => {
             console.log(error);
-            navigation.dispatch(goTo("SendNumber"));
+            navigation.navigate("SendNumber");
           });
       } else {
-        navigation.dispatch(goTo("SendNumber"));
+        navigation.navigate("SendNumber");
       }
     } catch (error) {
       console.log(error);

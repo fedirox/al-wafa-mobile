@@ -11,7 +11,6 @@ import {
   AsyncStorage,
 } from "react-native";
 import axios from "axios";
-import { goTo, goToWithParams } from "../helpers/CostumNavigation";
 
 export default function SendNumber({ navigation }) {
   const [code, setCode] = useState("");
@@ -41,10 +40,10 @@ export default function SendNumber({ navigation }) {
       .then((response) => {
         console.log(response.data);
         if (response.data.new) {
-          navigation.dispatch(goToWithParams("CreateProfile", {phone: phone}));
+          navigation.navigate("CreateProfile", {phone: phone});
         } else {
           save(response.data.token);
-          navigation.dispatch(goTo("MapGeolocation"));
+          navigation.navigate("MapGeolocation");
         }
       })
       .catch((error) => {

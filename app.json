@@ -1,29 +1,17 @@
 {
   "expo": {
-    "name": "al-wafa-frontend",
-    "slug": "al-wafa-frontend",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "name": "Al Wafa Express",
+    "icon": "./assets/logo.png",
     "version": "1.0.0",
+    "slug": "al-wafa-frontend",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "updates": {
-      "fallbackToCacheTimeout": 0
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.fediamen.alwafaexpress",
+      "buildNumber": "1.0.0"
     },
-    "description": ""
+    "android": {
+      "package": "com.fediamen.alwafaexpress",
+      "versionCode": 1
+    }
   }
 }
