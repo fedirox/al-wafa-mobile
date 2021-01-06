@@ -31,7 +31,7 @@ export default function SendNumber({ navigation }) {
     setLoading(true);
     setErrorMessage("");
 
-    let url = `${API_URL}/users/code`;
+    let url = "http://192.168.2.12:8080/users/code";
     await axios
       .post(url, {
         mobile_number: phone,
@@ -47,6 +47,7 @@ export default function SendNumber({ navigation }) {
         }
       })
       .catch((error) => {
+        console.log(error);
         setErrorMessage("Le code que vous avez entré est invalide");
       });
     setTimeout(function () {

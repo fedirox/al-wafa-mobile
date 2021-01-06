@@ -18,36 +18,31 @@ export default function SendNumber({ navigation }) {
   const code = "(+216)";
 
   const sendNumber = async () => {
-    if (number.match(/^[0-9]{8}$/g)) {
-      setErrorMessage("");
-      setLoading(true);
-      let url = `${API_URL}/users/number`;
-      let phoneNumber = code + number;
-
-      await axios
-        .post(url, {
-          mobile_number: phoneNumber,
-        })
-        .then((response) => {
-          console.log(response);
-
-          navigation.navigate("CodeVerification", {
-            phone: phoneNumber,
-          });
-        })
-        .catch((error) => {
-          console.log(error);
-          setErrorMessage(
-            "Il y a un probleme avec le serveur veuillez resseiller plus tard"
-          );
-        });
-
-      setTimeout(function () {
-        setLoading(false);
-      }, 500);
-    } else {
+    setErrorMessage("");
+    if (!number.match(/^[0-9]{8}$/g)) {
       setErrorMessage("Le numéro n'est pas valide");
+      return;
     }
+    setLoading(true);
+    let url = "http://192.168.2.12:8080/users/number";
+    let phoneNumber = code + number;
+    await axios
+      .post(url, {
+        phoneNumber,
+      })
+      .then((response) => {
+        console.log("response", response);
+        navigation.navigate("CodeVerification", {
+          phone: phoneNumber,
+        });
+      })
+      .catch((error) => {
+        console.log("error", error);
+        setErrorMessage(
+          "Il y a un probleme avec le serveur veuillez resseiller plus tard"
+        );
+      });
+    setLoading(false);
   };
   if (loading) {
     return (
