@@ -5,8 +5,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  AsyncStorage,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import moment from "moment";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -213,5 +213,4 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
   },
-
 });
