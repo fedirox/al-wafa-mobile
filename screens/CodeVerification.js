@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { API_URL } from "react-native-dotenv";
+
 import {
   View,
   StyleSheet,
@@ -8,10 +9,11 @@ import {
   Image,
   Text,
   ActivityIndicator,
-  AsyncStorage,
 } from "react-native";
+import AsyncStorage from "@react-native-community/async-storage";
 import axios from "axios";
 
+import * as apiUser from "../lib/apiUser";
 export default function SendNumber({ navigation }) {
   const [code, setCode] = useState("");
   const [errorMessage, setErrorMessage] = useState(null);
@@ -26,33 +28,37 @@ export default function SendNumber({ navigation }) {
       console.log(err);
     }
   };
+  const resendNumber = async () => {
+    setLoading(true);
+    setErrorMessage("");
+    try {
+      await apiUser.sendNumber({ phoneNumber: phone });
+    } catch (error) {
+      setErrorMessage(
+        "Il y a un probleme avec le serveur veuillez resseiller plus tard"
+      );
+    }
+    setLoading(false);
+  };
 
   const sendCode = async () => {
     setLoading(true);
     setErrorMessage("");
-
-    let url = "http://192.168.2.12:8080/users/code";
-    await axios
-      .post(url, {
+    try {
+      const data = await apiUser.verifyCode({
         mobile_number: phone,
         verificationCode: code,
-      })
-      .then((response) => {
-        console.log(response.data);
-        if (response.data.new) {
-          navigation.navigate("CreateProfile", {phone: phone});
-        } else {
-          save(response.data.token);
-          navigation.navigate("MapGeolocation");
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-        setErrorMessage("Le code que vous avez entré est invalide");
       });
-    setTimeout(function () {
-      setLoading(false);
-    }, 1000);
+      if (data.new) {
+        navigation.navigate("CreateProfile", { phone: phone });
+      } else {
+        save(data.token);
+        navigation.navigate("MapGeolocation");
+      }
+    } catch (error) {
+      setErrorMessage("Le code que vous avez entré est invalide");
+    }
+    setLoading(false);
   };
   if (loading) {
     return (
@@ -86,6 +92,11 @@ export default function SendNumber({ navigation }) {
         <TouchableOpacity style={styles.submitButtonWrapper}>
           <Text onPress={() => sendCode()} style={styles.submitButton}>
             Envoyer
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.submitButtonWrapper}>
+          <Text onPress={() => resendNumber()} style={styles.submitButton}>
+            Renvoyer Un SMS
           </Text>
         </TouchableOpacity>
       </View>

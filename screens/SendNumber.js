@@ -7,9 +7,8 @@ import {
   TextInput,
   ActivityIndicator,
 } from "react-native";
-import axios from "axios";
+import * as apiUser from "../lib/apiUser";
 import { TouchableOpacity } from "react-native-gesture-handler";
-import { API_URL } from "react-native-dotenv";
 
 export default function SendNumber({ navigation }) {
   const [number, setNumber] = useState("");
@@ -24,24 +23,18 @@ export default function SendNumber({ navigation }) {
       return;
     }
     setLoading(true);
-    let url = "http://192.168.2.12:8080/users/number";
     let phoneNumber = code + number;
-    await axios
-      .post(url, {
-        phoneNumber,
-      })
-      .then((response) => {
-        console.log("response", response);
-        navigation.navigate("CodeVerification", {
-          phone: phoneNumber,
-        });
-      })
-      .catch((error) => {
-        console.log("error", error);
-        setErrorMessage(
-          "Il y a un probleme avec le serveur veuillez resseiller plus tard"
-        );
+    try {
+      await apiUser.sendNumber({ phoneNumber });
+      navigation.navigate("CodeVerification", {
+        phone: phoneNumber,
       });
+    } catch (error) {
+      console.log(error);
+      setErrorMessage(
+        "Il y a un probleme avec le serveur veuillez resseiller plus tard"
+      );
+    }
     setLoading(false);
   };
   if (loading) {

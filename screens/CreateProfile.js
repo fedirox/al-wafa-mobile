@@ -6,7 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from "@react-native-community/async-storage";
 import axios from "axios";
 import moment from "moment";
 import DateTimePicker from "@react-native-community/datetimepicker";
